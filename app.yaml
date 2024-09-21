@@ -1,0 +1,54 @@
+# Deployment configuration
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuberneteslab-deployment
+  labels:
+    app: kuberneteslab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kuberneteslab
+  template:
+    metadata:
+      labels:
+        app: kuberneteslab
+    spec:
+      containers:
+        - name: kuberneteslab-container
+          image: katros01/kubernetlab
+          ports:
+            - containerPort: 8080
+
+
+---
+# Service configuration to expose the application
+apiVersion: v1
+kind: Service
+metadata:
+  name: kuberneteslab-service
+spec:
+  selector:
+    app: kuberneteslab
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      nodePort: 30100
+  type: LoadBalancer
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: kuberneteslab-autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: kuberneteslab-deployment
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
